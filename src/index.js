@@ -19,6 +19,6 @@ p2p.postP2p()
 const spot= new Spot(app)
 spot.getPairExchange()
 
-app.listen(80, () => {
+app.listen(process.env.PORT || 3002, () => {
   console.log('Start server')
 })
