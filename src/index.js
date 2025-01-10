@@ -6,6 +6,7 @@ import { P2p } from "./p2p.js";
 import { Spot } from "./spot.js";
 import schedule from "node-schedule";
 import { Telegraf, Markup } from "telegraf";
+import axios from "axios";
 
 dotenv.config();
 
@@ -25,8 +26,8 @@ app.listen(process.env.PORT || 3002, () => {
   console.log("Start server");
 });
 
-const API_URL = `https://api-binance.onrender.com/p2p`;
-const PAYLOAD = {
+// const API_URL = `${process.env.BINANCE_P2P_URL}/friendly/c2c/adv/search`;
+const PAYLOAD = JSON.stringify({
   proMerchantAds: false,
   page: 1,
   rows: 5,
@@ -36,7 +37,7 @@ const PAYLOAD = {
   asset: "USDT",
   fiat: "UAH",
   tradeType: "SELL",
-};
+});
 
 // Список подписчиков
 const subscribers = new Set();
@@ -44,15 +45,18 @@ const subscribers = new Set();
 // Функция для получения данных из API Binance
 const fetchBinanceData = async () => {
   try {
-    const resp = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(PAYLOAD),
-    });
+    const respons = axios.post(
+      `${process.env.BINANCE_P2P_URL}/friendly/c2c/adv/search`,
+      PAYLOAD,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    return await resp.json();
+    const result = await respons;
+    return result.data.data;
   } catch (error) {
     console.error(`Error fetching Binance data: ${error.message}`);
     return null;
@@ -78,8 +82,8 @@ const notifyUsers = async (bot) => {
   const message = formatData(data);
 
   for (const chatId of subscribers) {
-   await bot.telegram.sendMessage(chatId, 'Price')
-   await bot.telegram.sendMessage(chatId, message);
+    await bot.telegram.sendMessage(chatId, "Price");
+    await bot.telegram.sendMessage(chatId, message);
   }
 };
 
